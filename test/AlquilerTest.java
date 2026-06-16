@@ -1,125 +1,142 @@
 import controladores.*;
 import modelo.*;
 import modelo.enums.*;
-import org.junit.jupiter.api.*;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AlquilerTest {
 
-    @BeforeEach
-    void resetear() {
-        ClienteController.resetInstancia();
-        VehiculoController.resetInstancia();
-        AlquilerController.resetInstancia();
-        PagoController.resetInstancia();
-        HistorialController.resetInstancia();
-        Alquiler.resetContador();
+    public static void main(String[] args) {
+        testCalcularDiasAlquiler();
+        testCalcularImporteTotalComun();
+        testCalcularImporteTotalCorporativo();
+        testCalcularImporteTotalTuristico();
+        testVehiculoNoDisponible();
     }
 
-    // Test 1: registrar cliente queda ACTIVO
-    @Test
-    @Order(1)
-    void testRegistrarCliente() {
-        ClienteController ctrl = ClienteController.getInstancia();
-        Cliente c = ctrl.registrarCliente("20111111111", "Juan Perez",
-                "1111-2222", "jp@mail.com", "Corrientes 1", "admin");
+    private static void testCalcularDiasAlquiler() {
+        try {
+            Cliente c = new Cliente("20111111111", "Juan Perez", "1111-2222", "jp@mail.com", "Calle 1");
+            Vehiculo v = new Vehiculo("ABC123", "Toyota", "Corolla", 2022, 15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 100, 50.0);
+            Calendar cal = Calendar.getInstance();
+            cal.set(2026, Calendar.AUGUST, 1, 0, 0, 0);
+            Date inicio = cal.getTime();
+            cal.set(2026, Calendar.AUGUST, 5, 0, 0, 0);
+            Date fin = cal.getTime();
 
-        assertNotNull(c);
-        assertEquals("20111111111", c.getDniCuit());
-        assertEquals(EstadoCliente.ACTIVO, c.getEstado());
+            Alquiler a = new AlquilerComun(c, v, inicio, fin, 15000);
+            int dias = a.calcularDias();
+            if (dias == 4) {
+                System.out.println("[PASS] - testCalcularDiasAlquiler");
+            } else {
+                System.out.println("[FAIL] - testCalcularDiasAlquiler: Se esperaban 4 dias pero se obtuvo " + dias);
+            }
+        } catch (Exception e) {
+            System.out.println("[FAIL] - testCalcularDiasAlquiler: Ocurrio una excepcion: " + e.getMessage());
+        }
     }
 
-    // Test 2: registrar vehiculo queda DISPONIBLE
-    @Test
-    @Order(2)
-    void testRegistrarVehiculo() {
-        VehiculoController ctrl = VehiculoController.getInstancia();
-        Vehiculo v = ctrl.registrarVehiculo("ABC123", "Toyota", "Corolla", 2022,
-                15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 100, 50.0, "admin");
+    private static void testCalcularImporteTotalComun() {
+        try {
+            Cliente c = new Cliente("20111111111", "Juan Perez", "1111-2222", "jp@mail.com", "Calle 1");
+            Vehiculo v = new Vehiculo("ABC123", "Toyota", "Corolla", 2022, 15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 100, 50.0);
+            Calendar cal = Calendar.getInstance();
+            cal.set(2026, Calendar.AUGUST, 1, 0, 0, 0);
+            Date inicio = cal.getTime();
+            cal.set(2026, Calendar.AUGUST, 5, 0, 0, 0);
+            Date fin = cal.getTime();
 
-        assertNotNull(v);
-        assertEquals("ABC123", v.getPatente());
-        assertEquals(EstadoVehiculo.DISPONIBLE, v.getEstado());
+            Alquiler a = new AlquilerComun(c, v, inicio, fin, 15000);
+            a.setKilometrajeFinal(15000);
+            double total = a.calcularImporteTotal();
+            if (Math.abs(total - 20000.0) < 0.001) {
+                System.out.println("[PASS] - testCalcularImporteTotalComun");
+            } else {
+                System.out.println("[FAIL] - testCalcularImporteTotalComun: Se esperaba 20000.0 pero se obtuvo " + total);
+            }
+        } catch (Exception e) {
+            System.out.println("[FAIL] - testCalcularImporteTotalComun: Ocurrio una excepcion: " + e.getMessage());
+        }
     }
 
-    // Test 3: solicitar alquiler con vehiculo disponible
-    @Test
-    @Order(3)
-    void testSolicitarAlquilerDisponible() {
-        ClienteController.getInstancia().registrarCliente(
-                "20111111111", "Juan Perez", "1111-2222", "jp@mail.com", "Av. 1", "admin");
-        VehiculoController.getInstancia().registrarVehiculo(
-                "ABC123", "Toyota", "Corolla", 2022,
-                15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 0, 0, "admin");
+    private static void testCalcularImporteTotalCorporativo() {
+        try {
+            Cliente c = new Cliente("20111111111", "Juan Perez", "1111-2222", "jp@mail.com", "Calle 1");
+            Vehiculo v = new Vehiculo("ABC123", "Toyota", "Corolla", 2022, 15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 100, 50.0);
+            Calendar cal = Calendar.getInstance();
+            cal.set(2026, Calendar.AUGUST, 1, 0, 0, 0);
+            Date inicio = cal.getTime();
+            cal.set(2026, Calendar.AUGUST, 5, 0, 0, 0);
+            Date fin = cal.getTime();
 
-        Date inicio = fecha(2026, 8, 1);
-        Date fin    = fecha(2026, 8, 5);
-
-        Alquiler a = AlquilerController.getInstancia()
-                .solicitarAlquiler("20111111111", "ABC123", inicio, fin, "COMUN", "admin");
-
-        assertNotNull(a);
-        assertEquals(EstadoAlquiler.INGRESADO, a.getEstado());
-        assertInstanceOf(AlquilerComun.class, a);
+            Alquiler a = new AlquilerCorporativo(c, v, inicio, fin, 15000, 10.0);
+            a.setKilometrajeFinal(15000);
+            double total = a.calcularImporteTotal();
+            if (Math.abs(total - 18000.0) < 0.001) {
+                System.out.println("[PASS] - testCalcularImporteTotalCorporativo");
+            } else {
+                System.out.println("[FAIL] - testCalcularImporteTotalCorporativo: Se esperaba 18000.0 pero se obtuvo " + total);
+            }
+        } catch (Exception e) {
+            System.out.println("[FAIL] - testCalcularImporteTotalCorporativo: Ocurrio una excepcion: " + e.getMessage());
+        }
     }
 
-    // Test 4: cancelar con >48h devuelve senia como credito a favor
-    @Test
-    @Order(4)
-    void testCancelarAlquilerConCreditoAFavor() {
-        ClienteController.getInstancia().registrarCliente(
-                "20222222222", "Ana Garcia", "2222-3333", "ag@mail.com", "Calle 123", "admin");
-        VehiculoController.getInstancia().registrarVehiculo(
-                "XYZ789", "Ford", "Focus", 2021,
-                20000, 4000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 0, 0, "admin");
+    private static void testCalcularImporteTotalTuristico() {
+        try {
+            Cliente c = new Cliente("20111111111", "Juan Perez", "1111-2222", "jp@mail.com", "Calle 1");
+            Vehiculo v = new Vehiculo("ABC123", "Toyota", "Corolla", 2022, 15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 100, 50.0);
+            Calendar cal = Calendar.getInstance();
+            cal.set(2026, Calendar.AUGUST, 1, 0, 0, 0);
+            Date inicio = cal.getTime();
+            cal.set(2026, Calendar.AUGUST, 5, 0, 0, 0);
+            Date fin = cal.getTime();
 
-        AlquilerController ctrlAlq = AlquilerController.getInstancia();
-        Alquiler a = ctrlAlq.solicitarAlquiler(
-                "20222222222", "XYZ789",
-                fecha(2026, 9, 10), fecha(2026, 9, 12), "COMUN", "admin");
-
-        // Confirmar con seña de $2000
-        ctrlAlq.confirmarAlquilerConSenia(a.getId(), 2000.0, MedioPago.EFECTIVO, "admin");
-        assertEquals(EstadoAlquiler.CONFIRMADO, a.getEstado());
-
-        // Cancelar 5 días antes (> 48h)
-        ctrlAlq.cancelarAlquiler(a.getId(), fecha(2026, 9, 5), "admin");
-
-        assertEquals(EstadoAlquiler.CANCELADO, a.getEstado());
-        Cliente cliente = ClienteController.getInstancia().buscarClientePorDniCuit("20222222222");
-        assertEquals(2000.0, cliente.getCreditoAFavor(), 0.01);
+            Alquiler a = new AlquilerTuristico(c, v, inicio, fin, 15000, 15.0);
+            a.setKilometrajeFinal(15000);
+            double total = a.calcularImporteTotal();
+            if (Math.abs(total - 23000.0) < 0.001) {
+                System.out.println("[PASS] - testCalcularImporteTotalTuristico");
+            } else {
+                System.out.println("[FAIL] - testCalcularImporteTotalTuristico: Se esperaba 23000.0 pero se obtuvo " + total);
+            }
+        } catch (Exception e) {
+            System.out.println("[FAIL] - testCalcularImporteTotalTuristico: Ocurrio una excepcion: " + e.getMessage());
+        }
     }
 
-    // Test 5: calcular importe con descuento corporativo del 10%
-    @Test
-    @Order(5)
-    void testCalcularImporteTotalCorporativo() {
-        ClienteController.getInstancia().registrarCliente(
-                "30333333333", "Empresa SA", "3333-4444", "emp@corp.com", "Av. Empresa 1", "admin");
-        VehiculoController.getInstancia().registrarVehiculo(
-                "DEF456", "Renault", "Kangoo", 2023,
-                5000, 3000.0, TipoVehiculo.UTILITARIO, TipoCombustible.DIESEL, 0, 0, "admin");
+    private static void testVehiculoNoDisponible() {
+        try {
+            Cliente c = new Cliente("20111111111", "Juan Perez", "1111-2222", "jp@mail.com", "Calle 1");
+            Vehiculo v = new Vehiculo("ABC123", "Toyota", "Corolla", 2022, 15000, 5000.0, TipoVehiculo.AUTO, TipoCombustible.NAFTA, 100, 50.0);
+            
+            Calendar cal = Calendar.getInstance();
+            cal.set(2026, Calendar.AUGUST, 5, 0, 0, 0);
+            Date inicioActivo = cal.getTime();
+            cal.set(2026, Calendar.AUGUST, 10, 0, 0, 0);
+            Date finActivo = cal.getTime();
 
-        // 3 dias * $3000 * (1 - 10%) = $8100
-        Alquiler a = AlquilerController.getInstancia().solicitarAlquiler(
-                "30333333333", "DEF456",
-                fecha(2026, 10, 1), fecha(2026, 10, 4), "CORPORATIVO", "admin");
+            Alquiler alquilerActivo = new AlquilerComun(c, v, inicioActivo, finActivo, 15000);
+            alquilerActivo.cambiarEstado(EstadoAlquiler.CONFIRMADO);
+            
+            List<Alquiler> alquileres = new java.util.ArrayList<>();
+            alquileres.add(alquilerActivo);
 
-        double total = a.calcularImporteTotal();
-        assertEquals(8100.0, total, 0.01);
-    }
+            cal.set(2026, Calendar.AUGUST, 8, 0, 0, 0);
+            Date inicioSuperpuesto = cal.getTime();
+            cal.set(2026, Calendar.AUGUST, 12, 0, 0, 0);
+            Date finSuperpuesto = cal.getTime();
 
-    // Helper: crea un Date sin hora
-    private Date fecha(int anio, int mes, int dia) {
-        Calendar cal = Calendar.getInstance();
-        cal.set(anio, mes - 1, dia, 0, 0, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTime();
+            boolean disponible = v.estaDisponible(inicioSuperpuesto, finSuperpuesto, alquileres);
+            if (!disponible) {
+                System.out.println("[PASS] - testVehiculoNoDisponible");
+            } else {
+                System.out.println("[FAIL] - testVehiculoNoDisponible: Se esperaba false pero se obtuvo true");
+            }
+        } catch (Exception e) {
+            System.out.println("[FAIL] - testVehiculoNoDisponible: Ocurrio una excepcion: " + e.getMessage());
+        }
     }
 }

@@ -42,9 +42,9 @@ opt disponible
     alt clase es COMUN
         AC -> A ** : new AlquilerComun(cliente, vehiculo, fInicio, fFin, kmInicial)
     else clase es CORPORATIVO
-        AC -> A ** : new AlquilerCorporativo(cliente, vehiculo, fInicio, fFin, kmInicial)
+        AC -> A ** : new AlquilerCorporativo(cliente, vehiculo, fInicio, fFin, kmInicial, porcentajeDescuentoCorporativo)
     else clase es TURISTICO
-        AC -> A ** : new AlquilerTuristico(cliente, vehiculo, fInicio, fFin, kmInicial)
+        AC -> A ** : new AlquilerTuristico(cliente, vehiculo, fInicio, fFin, kmInicial, porcentajeRecargoTuristico)
     end
 
     AC -> A : cambiarEstado(INGRESADO)

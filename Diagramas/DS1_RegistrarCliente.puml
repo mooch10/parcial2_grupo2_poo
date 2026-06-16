@@ -17,7 +17,7 @@ participant "historial : HistorialCambioEstado" as H
 Usuario -> V : registrarCliente()
 activate V
 
-V -> CC : registrarCliente(dniCuit, nombre, tel, email, dir, usuario)
+V -> CC : registrarCliente(dniCuit, nombre, telefono, email, direccion, usuario)
 activate CC
 
 CC -> CC : buscarClientePorDniCuit(dniCuit)
@@ -25,7 +25,7 @@ activate CC
 CC --> CC : null
 deactivate CC
 
-CC -> C ** : new Cliente(dniCuit, nombre, tel, email, dir)
+CC -> C ** : new Cliente(dniCuit, nombre, telefono, email, direccion)
 CC -> C : activar()
 activate C
 deactivate C

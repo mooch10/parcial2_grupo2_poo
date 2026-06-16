@@ -86,10 +86,16 @@ class Cliente {
     - direccion : String
     - estado : EstadoCliente
     - creditoAFavor : double
-    + Cliente(dniCuit, nombre, tel, email, dir)
+    + Cliente(dniCuit, nombreRazonSocial, telefono, email, direccion)
     + activar() : void
     + agregarCredito(importe : double) : void
     + getDniCuit() : String
+    + getNombreRazonSocial() : String
+    + getTelefono() : String
+    + getEmail() : String
+    + getDireccion() : String
+    + getEstado() : EstadoCliente
+    + getCreditoAFavor() : double
 }
 
 class Vehiculo {
@@ -104,12 +110,21 @@ class Vehiculo {
     - tipoCombustible : TipoCombustible
     - kmIncluidosPorDia : int
     - costoKmExcedente : double
-    + Vehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm)
+    + Vehiculo(patente, marca, modelo, anio, kilometrajeActual, valorDiario, tipoVehiculo, tipoCombustible, kmIncluidosPorDia, costoKmExcedente)
     + cambiarEstado(nuevoEstado : EstadoVehiculo) : void
     + estaDisponible(fInicio : Date, fFin : Date, alquileres : List) : boolean
     + actualizarKilometraje(kmFinal : int) : void
     + getPatente() : String
     + getTipoVehiculo() : TipoVehiculo
+    + getMarca() : String
+    + getModelo() : String
+    + getAnio() : int
+    + getKilometrajeActual() : int
+    + getEstado() : EstadoVehiculo
+    + getValorDiario() : double
+    + getTipoCombustible() : TipoCombustible
+    + getKmIncluidosPorDia() : int
+    + getCostoKmExcedente() : double
 }
 
 class Pago {
@@ -120,11 +135,17 @@ class Pago {
     - estado : EstadoPago
     - usuarioRegistrador : String
     - tipoPago : TipoPago
-    + Pago(id, fecha, importe, medioPago, usr, tipo)
+    + Pago(id, fecha, importe, medioPago, usuario, tipoPago)
     + confirmar() : void
     + anular() : void
     + esSeniaConfirmada() : boolean
     + getImporte() : double
+    + getId() : int
+    + getFecha() : Date
+    + getMedioPago() : MedioPago
+    + getEstado() : EstadoPago
+    + getUsuarioRegistrador() : String
+    + getTipoPago() : TipoPago
 }
 
 abstract class Alquiler {
@@ -146,24 +167,45 @@ abstract class Alquiler {
     + calcularSaldoPendiente() : double
     + calcularHorasAnticipacion(fCancelacion : Date) : long
     + agregarPago(pago : Pago) : void
+    + seSuperpone(fInicio : Date, fFin : Date) : boolean
     + {abstract} calcularImporteTotal() : double
     + getId() : int
+    + getFechaInicio() : Date
+    + getFechaDevolucionEstimada() : Date
+    + getFechaDevolucionReal() : Date
+    + getEstado() : EstadoAlquiler
+    + getKilometrajeInicial() : int
+    + getKilometrajeFinal() : int
+    + getImporteTotal() : double
+    + getImportePendiente() : double
+    + getCliente() : Cliente
+    + getVehiculo() : Vehiculo
+    + getPagos() : List<Pago>
+    + setKilometrajeFinal(km : int) : void
+    + setFechaDevolucionReal(fecha : Date) : void
+    + setImporteTotal(importe : double) : void
+    + setImportePendiente(importe : double) : void
 }
 
 class AlquilerComun {
+    + AlquilerComun(cliente, vehiculo, fInicio, fDevEst, kmIni)
     + calcularImporteTotal() : double
 }
 
 class AlquilerCorporativo {
     - porcentajeDescuento : double
+    + AlquilerCorporativo(cliente, vehiculo, fInicio, fDevEst, kmIni, porcentajeDescuento)
     + calcularImporteTotal() : double
     + getPorcentajeDescuento() : double
+    + setPorcentajeDescuento(p : double) : void
 }
 
 class AlquilerTuristico {
     - porcentajeRecargo : double
+    + AlquilerTuristico(cliente, vehiculo, fInicio, fDevEst, kmIni, porcentajeRecargo)
     + calcularImporteTotal() : double
     + getPorcentajeRecargo() : double
+    + setPorcentajeRecargo(p : double) : void
 }
 
 ' ─────────────── CONTROLADORES SINGLETON ───────────────
@@ -173,7 +215,7 @@ class ClienteController <<Singleton>> {
     - clientes : List<Cliente>
     - ClienteController()
     + {static} getInstancia() : ClienteController
-    + registrarCliente(dniCuit, nombre, tel, email, dir, usuario) : Cliente
+    + registrarCliente(dniCuit, nombre, telefono, email, direccion, usuario) : Cliente
     + buscarClientePorDniCuit(dniCuit : String) : Cliente
     + alquileresConfirmadosDeCliente(dniCuit : String) : List<Alquiler>
     + getClientes() : List<Cliente>
@@ -184,7 +226,7 @@ class VehiculoController <<Singleton>> {
     - vehiculos : List<Vehiculo>
     - VehiculoController()
     + {static} getInstancia() : VehiculoController
-    + registrarVehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm, usuario) : Vehiculo
+    + registrarVehiculo(patente, marca, modelo, anio, km, valorDiario, tipo, combustible, kmD, cKm, usuario) : Vehiculo
     + buscarVehiculoPorPatente(patente : String) : Vehiculo
     + consultarVehiculosDisponibles(fInicio : Date, fFin : Date, tipo : TipoVehiculo) : List<Vehiculo>
     + getVehiculos() : List<Vehiculo>
@@ -275,7 +317,7 @@ HistorialController "1" *-- "0..*" HistorialCambioEstado
 ' ─────────────── DEPENDENCIAS ENTRE CONTROLADORES ───────────────
 
 ClienteController  ..> HistorialController
-VehiculoController ..> HistorialControlleros
+VehiculoController ..> HistorialController
 AlquilerController ..> HistorialController
 PagoController     ..> HistorialController
 AlquilerController ..> ClienteController

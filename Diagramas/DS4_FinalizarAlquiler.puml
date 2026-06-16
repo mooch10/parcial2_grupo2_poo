@@ -6,21 +6,15 @@ title UC 4 — Finalizar Alquiler y Calcular Saldo
 
 actor Usuario
 
-participant "view : FinalizarAlquilerView" as V
 participant "ctrlAlq : AlquilerController" as AC
 participant "alquiler : Alquiler" as A
 participant "vehiculo : Vehiculo" as Veh
-participant "pagos : List<Pago>" as LP
-participant "pago : Pago" as P
 participant "ctrlHist : HistorialController" as HC
 participant "historiales : List<HistorialCambioEstado>" as LH
 participant "historialAlq : HistorialCambioEstado" as HA
 participant "historialVeh : HistorialCambioEstado" as HV
 
-Usuario -> V : finalizarAlquiler()
-activate V
-
-V -> AC : finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario)
+Usuario -> AC : finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario)
 activate AC
 
 AC -> AC : buscarPorId(idAlquiler)
@@ -37,36 +31,30 @@ AC -> Veh : actualizarKilometraje(kmFinal)
 activate Veh
 deactivate Veh
 
+AC -> A : setKilometrajeFinal(kmFinal)
+activate A
+deactivate A
+
+AC -> A : setFechaDevolucionReal(fDevReal)
+activate A
+deactivate A
+
 AC -> A : calcularImporteTotal()
 activate A
 A --> AC : importeTotal
 deactivate A
 
-AC -> A : getPagos()
+AC -> A : setImporteTotal(importeTotal)
 activate A
-A --> AC : pagos
 deactivate A
-
-loop recorrer pagos para calcular seña abonada
-    AC -> LP : obtenerSiguiente()
-    activate LP
-    LP --> AC : pagoActual
-    deactivate LP
-    
-    AC -> P : esSeniaConfirmada()
-    activate P
-    P --> AC : resultado
-    deactivate P
-    
-    AC -> P : getImporte()
-    activate P
-    P --> AC : importePago
-    deactivate P
-end
 
 AC -> A : calcularSaldoPendiente()
 activate A
 A --> AC : saldoPendiente
+deactivate A
+
+AC -> A : setImportePendiente(saldoPendiente)
+activate A
 deactivate A
 
 AC -> A : cambiarEstado(FINALIZADO)
@@ -100,10 +88,7 @@ deactivate LH
 HC --> AC : historialVeh
 deactivate HC
 
-AC --> V : saldoPendiente
+AC --> Usuario : saldoPendiente
 deactivate AC
-
-V --> Usuario : mostrar saldo pendiente
-deactivate V
 
 @enduml
