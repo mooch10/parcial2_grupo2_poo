@@ -1,0 +1,47 @@
+@startuml DS5_ConsultarVehiculosDisponibles
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title UC 5 — Consultar Vehículos Disponibles
+
+actor Usuario
+
+participant "sistema : SistemaController" as SC
+participant "vehiculos : List<Vehiculo>" as LV
+participant "vehiculo : Vehiculo" as V
+participant "alquileres : List<Alquiler>" as LA
+participant "alquiler : Alquiler" as A
+participant "resultado : List<Vehiculo>" as LR
+
+Usuario -> SC : consultarVehiculosDisponibles(fechaInicio, fechaFin, tipoVehiculo)
+
+SC -> LR ** : new List<Vehiculo>()
+
+loop [recorrer vehiculos]
+    SC -> LV : obtenerSiguiente()
+    LV --> SC : vehiculoActual
+    SC -> V  : getTipoVehiculo()
+    V --> SC  : tipoVehiculoActual
+
+    opt [tipoVehiculoActual coincide]
+        loop [recorrer alquileres para validar disponibilidad]
+            SC -> LA : obtenerSiguiente()
+            LA --> SC : alquilerActual
+            SC -> A  : correspondeAVehiculo(vehiculo)
+            A --> SC  : corresponde
+            SC -> A  : seSuperpone(fechaInicio, fechaFin)
+            A --> SC  : seSuperpone
+        end
+
+        SC -> V : estaDisponible(fechaInicio, fechaFin, alquileres)
+        V --> SC : disponible
+
+        opt [disponible]
+            SC -> LR : add(vehiculo)
+        end
+    end
+end
+
+SC --> Usuario : resultado
+
+@enduml

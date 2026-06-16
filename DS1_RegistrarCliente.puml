@@ -1,0 +1,30 @@
+@startuml DS1_RegistrarCliente
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title UC 1 — Registrar Cliente
+
+actor Usuario
+
+participant "sistema : SistemaController" as SC
+participant "clientes : List<Cliente>" as LC
+participant "cliente : Cliente" as C
+participant "historial : HistorialCambioEstado" as H
+
+Usuario -> SC : registrarCliente(dniCuit, nombreRazonSocial,\n telefono, email, direccion, usuario)
+
+loop [recorrer clientes para validar DNI/CUIT]
+    SC -> LC : obtenerSiguiente()
+    LC --> SC : clienteActual
+end
+
+SC -> C ** : new Cliente(dniCuit, nombreRazonSocial, telefono, email, direccion)
+SC -> C  : activar()
+SC -> LC : add(cliente)
+SC -> H ** : new HistorialCambioEstado(fecha, "-", "ACTIVO",\n CLIENTE, dniCuit, usuario)
+SC -> H  : asociarCliente(cliente)
+SC -> SC : historiales.add(historial)
+
+SC --> Usuario : cliente registrado
+
+@enduml

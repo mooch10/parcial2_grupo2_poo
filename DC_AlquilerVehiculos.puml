@@ -1,0 +1,324 @@
+@startuml DC_AlquilerVehiculos
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+
+' ─────────────── ENUMS ───────────────
+
+enum EstadoCliente {
+    ACTIVO
+    INACTIVO
+}
+
+enum EstadoVehiculo {
+    DISPONIBLE
+    ALQUILADO
+    MANTENIMIENTO
+    BAJA
+}
+
+enum EstadoAlquiler {
+    INGRESADO
+    CONFIRMADO
+    EN_CURSO
+    FINALIZADO
+    CANCELADO
+}
+
+enum EstadoPago {
+    REGISTRADO
+    CONFIRMADO
+    ANULADO
+}
+
+enum TipoVehiculo {
+    AUTO
+    CAMIONETA
+    UTILITARIO
+    MOTO
+}
+
+enum TipoCombustible {
+    NAFTA
+    DIESEL
+    GNC
+    ELECTRICO
+    HIBRIDO
+}
+
+enum MedioPago {
+    EFECTIVO
+    TRANSFERENCIA
+    TARJETA
+    BILLETERA_VIRTUAL
+}
+
+enum TipoPago {
+    SENIA
+    SALDO
+}
+
+enum TipoEntidad {
+    CLIENTE
+    VEHICULO
+    ALQUILER
+    PAGO
+}
+
+' ─────────────── HISTORIAL ───────────────
+
+class HistorialCambioEstado {
+    -id : int
+    -fechaCambio : Date
+    -estadoAnterior : String
+    -estadoNuevo : String
+    -tipoEntidad : TipoEntidad
+    -referenciaEntidad : String
+    -usuarioResponsable : String
+    +HistorialCambioEstado(fecha, estadoAnterior, estadoNuevo, tipoEntidad, referencia, usuario)
+    +asociarCliente(cliente : Cliente) : void
+    +asociarVehiculo(vehiculo : Vehiculo) : void
+    +asociarAlquiler(alquiler : Alquiler) : void
+    +getTipoEntidad() : TipoEntidad
+    +getReferenciaEntidad() : String
+}
+
+' ─────────────── CLIENTE ───────────────
+
+class Cliente {
+    -dniCuit : String
+    -nombreRazonSocial : String
+    -telefono : String
+    -email : String
+    -direccion : String
+    -estado : EstadoCliente
+    -creditoAFavor : double
+    +Cliente(dniCuit, nombre, telefono, email, direccion)
+    +activar() : void
+    +agregarCredito(importe : double) : void
+    +getDniCuit() : String
+    +getNombreRazonSocial() : String
+    +getEstado() : EstadoCliente
+    +getCreditoAFavor() : double
+}
+
+' ─────────────── VEHICULO ───────────────
+
+class Vehiculo {
+    -patente : String
+    -marca : String
+    -modelo : String
+    -anio : int
+    -kilometrajeActual : int
+    -estado : EstadoVehiculo
+    -valorDiario : double
+    -tipoVehiculo : TipoVehiculo
+    -tipoCombustible : TipoCombustible
+    -kmIncluidosPorDia : int
+    -costoKmExcedente : double
+    +Vehiculo(patente, marca, modelo, anio, km, valorDiario, tipo, combustible, kmDia, costoKm)
+    +cambiarEstado(nuevoEstado : EstadoVehiculo) : void
+    +estaDisponible(fechaInicio : Date, fechaFin : Date, alquileres : List) : boolean
+    +actualizarKilometraje(kmFinal : int) : void
+    +calcularCostoKmExcedente(kmRecorridos : int, dias : int) : double
+    +getPatente() : String
+    +getTipoVehiculo() : TipoVehiculo
+    +getEstado() : EstadoVehiculo
+    +getValorDiario() : double
+    +getKilometrajeActual() : int
+}
+
+' ─────────────── PAGO ───────────────
+
+class Pago {
+    -id : int
+    -fecha : Date
+    -importe : double
+    -medioPago : MedioPago
+    -estado : EstadoPago
+    -usuarioRegistrador : String
+    -tipoPago : TipoPago
+    +Pago(id, fecha, importe, medioPago, usuario, tipoPago)
+    +confirmar() : void
+    +anular() : void
+    +esSeniaConfirmada() : boolean
+    +getImporte() : double
+    +getTipoPago() : TipoPago
+    +getEstado() : EstadoPago
+}
+
+' ─────────────── ALQUILER (abstracta) ───────────────
+
+abstract class Alquiler {
+    -id : int
+    -fechaInicio : Date
+    -fechaDevolucionEstimada : Date
+    -fechaDevolucionReal : Date
+    -estado : EstadoAlquiler
+    -kilometrajeInicial : int
+    -kilometrajeFinal : int
+    -importeTotal : double
+    -importePendiente : double
+    +Alquiler(cliente, vehiculo, fechaInicio, fechaDevolucionEstimada, kmInicial)
+    +cambiarEstado(nuevoEstado : EstadoAlquiler) : void
+    +calcularDias() : int
+    +calcularImporteBase() : double
+    +calcularKmRecorridos() : int
+    +calcularKmExcedentes() : double
+    +calcularSeniaAbonada() : double
+    +calcularSaldoPendiente() : double
+    +calcularHorasAnticipacion(fechaCancelacion : Date) : long
+    +{abstract} calcularImporteTotal() : double
+    +correspondeAVehiculo(v : Vehiculo) : boolean
+    +seSuperpone(inicio : Date, fin : Date) : boolean
+    +agregarPago(pago : Pago) : void
+    +getId() : int
+    +getEstado() : EstadoAlquiler
+    +getCliente() : Cliente
+    +getVehiculo() : Vehiculo
+    +getPagos() : List<Pago>
+}
+
+' ─────────────── SUBCLASES ALQUILER ───────────────
+
+class AlquilerComun {
+    +AlquilerComun(cliente, vehiculo, fechaInicio, fechaFin, kmInicial)
+    +calcularImporteTotal() : double
+}
+
+class AlquilerCorporativo {
+    -porcentajeDescuento : double
+    +AlquilerCorporativo(cliente, vehiculo, fechaInicio, fechaFin, kmInicial, porcentajeDescuento)
+    +calcularImporteTotal() : double
+    +getPorcentajeDescuento() : double
+    +setPorcentajeDescuento(p : double) : void
+}
+
+class AlquilerTuristico {
+    -porcentajeRecargo : double
+    +AlquilerTuristico(cliente, vehiculo, fechaInicio, fechaFin, kmInicial, porcentajeRecargo)
+    +calcularImporteTotal() : double
+    +getPorcentajeRecargo() : double
+    +setPorcentajeRecargo(p : double) : void
+}
+
+' ─────────────── CONTROLADOR SINGLETON ───────────────
+
+class SistemaController <<Singleton>> {
+    -{static} instancia : SistemaController
+    -clientes : List<Cliente>
+    -vehiculos : List<Vehiculo>
+    -alquileres : List<Alquiler>
+    -historiales : List<HistorialCambioEstado>
+    -porcentajeDescuentoCorporativo : double
+    -porcentajeRecargoTuristico : double
+    -SistemaController()
+    +{static} getInstancia() : SistemaController
+    +registrarCliente(dniCuit, nombre, telefono, email, direccion, usuario) : Cliente
+    +registrarVehiculo(patente, marca, modelo, anio, km, valorDiario, tipo, combustible, kmDia, costoKm, usuario) : Vehiculo
+    +solicitarAlquiler(dniCuit, patente, fechaInicio, fechaFin, claseAlquiler, usuario) : Alquiler
+    +confirmarAlquilerConSenia(idAlquiler, importe, medioPago, usuario) : Pago
+    +cancelarAlquiler(idAlquiler, fechaCancelacion, usuario) : void
+    +iniciarAlquiler(idAlquiler, usuario) : void
+    +finalizarAlquiler(idAlquiler, kmFinal, fechaDevolucionReal, usuario) : double
+    +consultarVehiculosDisponibles(fechaInicio, fechaFin, tipoVehiculo) : List<Vehiculo>
+    +totalRecaudadoPorPeriodo(desde, hasta) : double
+    +alquileresConfirmadosDeCliente(dniCuit) : List<Alquiler>
+    +obtenerPorcentajeAplicable(alquiler) : double
+    +getClientes() : List<Cliente>
+    +getVehiculos() : List<Vehiculo>
+    +getAlquileres() : List<Alquiler>
+}
+
+' ─────────────── VISTAS ───────────────
+
+class MainView {
+    -controller : SistemaController
+    +MainView()
+    +inicializarUI() : void
+}
+
+class RegistrarClienteView {
+    -controller : SistemaController
+    -txtDniCuit : JTextField
+    -txtNombre : JTextField
+    -txtTelefono : JTextField
+    -txtEmail : JTextField
+    -txtDireccion : JTextField
+    -txtUsuario : JTextField
+    -btnRegistrar : JButton
+    -lblResultado : JLabel
+    +RegistrarClienteView()
+    +inicializarUI() : void
+    -registrarCliente() : void
+    -limpiarFormulario() : void
+}
+
+class SolicitarAlquilerView {
+    -controller : SistemaController
+    -txtDniCuit : JTextField
+    -txtPatente : JTextField
+    -txtFechaInicio : JTextField
+    -txtFechaFin : JTextField
+    -cmbTipoAlquiler : JComboBox
+    -txtUsuario : JTextField
+    -btnSolicitar : JButton
+    -areaResultado : JTextArea
+    +SolicitarAlquilerView()
+    +inicializarUI() : void
+    -solicitarAlquiler() : void
+}
+
+class ConsultarDisponibilidadView {
+    -controller : SistemaController
+    -txtFechaInicio : JTextField
+    -txtFechaFin : JTextField
+    -cmbTipo : JComboBox
+    -btnConsultar : JButton
+    -tabla : JTable
+    -modeloTabla : DefaultTableModel
+    -lblTotal : JLabel
+    +ConsultarDisponibilidadView()
+    +inicializarUI() : void
+    -consultar() : void
+}
+
+' ─────────────── HERENCIA ───────────────
+
+Alquiler <|-- AlquilerComun
+Alquiler <|-- AlquilerCorporativo
+Alquiler <|-- AlquilerTuristico
+
+' ─────────────── ASOCIACIONES ───────────────
+
+Cliente          "1"    o--   "0..*"  Alquiler           : solicita >
+Vehiculo         "1"    o--   "0..*"  Alquiler           : asociado a >
+Alquiler         "1"    *--   "0..*"  Pago               : contiene >
+HistorialCambioEstado "0..*" --  "0..1"  Cliente          : afecta >
+HistorialCambioEstado "0..*" --  "0..1"  Vehiculo         : afecta >
+HistorialCambioEstado "0..*" --  "0..1"  Alquiler         : afecta >
+
+' Enums usados
+Cliente          ..  EstadoCliente
+Vehiculo         ..  EstadoVehiculo
+Vehiculo         ..  TipoVehiculo
+Vehiculo         ..  TipoCombustible
+Alquiler         ..  EstadoAlquiler
+Pago             ..  EstadoPago
+Pago             ..  MedioPago
+Pago             ..  TipoPago
+HistorialCambioEstado .. TipoEntidad
+
+' MVC: Vistas usan al controlador
+MainView                  ..>  SistemaController : usa
+RegistrarClienteView      ..>  SistemaController : usa
+SolicitarAlquilerView     ..>  SistemaController : usa
+ConsultarDisponibilidadView ..> SistemaController : usa
+
+' Controlador gestiona las colecciones del modelo
+SistemaController "1" *-- "0..*" Cliente              : gestiona >
+SistemaController "1" *-- "0..*" Vehiculo             : gestiona >
+SistemaController "1" *-- "0..*" Alquiler             : gestiona >
+SistemaController "1" *-- "0..*" HistorialCambioEstado : registra >
+
+@enduml

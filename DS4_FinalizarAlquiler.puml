@@ -1,0 +1,57 @@
+@startuml DS4_FinalizarAlquiler
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title UC 4 — Finalizar Alquiler y Calcular Saldo
+
+actor Usuario
+
+participant "sistema : SistemaController" as SC
+participant "alquileres : List<Alquiler>" as LA
+participant "alquiler : Alquiler" as A
+participant "vehiculo : Vehiculo" as V
+participant "pagos : List<Pago>" as LP
+participant "pago : Pago" as P
+participant "historial : HistorialCambioEstado" as H
+
+Usuario -> SC : finalizarAlquiler(idAlquiler,\n kilometrajeFinal,\n fechaDevolucionReal, usuario)
+
+loop [recorrer alquileres para buscar alquiler]
+    SC -> LA : obtenerSiguiente()
+    LA --> SC : alquilerActual
+    SC -> A  : getId()
+    A --> SC  : idActual
+end
+
+SC -> A  : getVehiculo()
+A --> SC  : vehiculo
+
+SC -> V  : actualizarKilometraje(kilometrajeFinal)
+SC -> A  : calcularImporteTotal()
+A --> SC  : importeTotal
+
+SC -> A  : getPagos()
+A --> SC  : pagos
+
+loop [recorrer pagos para calcular seña abonada]
+    SC -> LP : obtenerSiguiente()
+    LP --> SC : pagoActual
+    SC -> P  : esSeniaConfirmada()
+    P --> SC  : resultado
+    SC -> P  : getImporte()
+    P --> SC  : importePago
+end
+
+SC -> A  : calcularSaldoPendiente()
+A --> SC  : saldoPendiente
+
+SC -> A  : cambiarEstado(FINALIZADO)
+SC -> V  : cambiarEstado(DISPONIBLE)
+
+SC -> H ** : new HistorialCambioEstado(fecha, "EN_CURSO", "FINALIZADO",\n ALQUILER, idAlquiler, usuario)
+SC -> H  : asociarAlquiler(alquiler)
+SC -> SC : historiales.add(historial)
+
+SC --> Usuario : saldoPendiente
+
+@enduml

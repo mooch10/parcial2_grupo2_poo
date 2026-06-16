@@ -1,0 +1,30 @@
+@startuml DS2_RegistrarVehiculo
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title UC 2 — Registrar Vehículo
+
+actor Usuario
+
+participant "sistema : SistemaController" as SC
+participant "vehiculos : List<Vehiculo>" as LV
+participant "vehiculo : Vehiculo" as V
+participant "historial : HistorialCambioEstado" as H
+
+Usuario -> SC : registrarVehiculo(patente, marca, modelo, anio,\n kilometraje, valorDiario, tipoVehiculo,\n tipoCombustible, kmIncluidosPorDia,\n costoKmExcedente, usuario)
+
+loop [recorrer vehiculos para validar patente]
+    SC -> LV : obtenerSiguiente()
+    LV --> SC : vehiculoActual
+end
+
+SC -> V ** : new Vehiculo(patente, marca, modelo, anio,\n kilometraje, valorDiario, tipoVehiculo,\n tipoCombustible, kmIncluidosPorDia, costoKmExcedente)
+SC -> V  : cambiarEstado(DISPONIBLE)
+SC -> LV : add(vehiculo)
+SC -> H ** : new HistorialCambioEstado(fecha, "-", "DISPONIBLE",\n VEHICULO, patente, usuario)
+SC -> H  : asociarVehiculo(vehiculo)
+SC -> SC : historiales.add(historial)
+
+SC --> Usuario : vehiculo registrado
+
+@enduml

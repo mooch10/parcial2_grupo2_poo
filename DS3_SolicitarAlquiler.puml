@@ -1,0 +1,57 @@
+@startuml DS3_SolicitarAlquiler
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title UC 3 — Solicitar Alquiler
+
+actor Usuario
+
+participant "sistema : SistemaController" as SC
+participant "clientes : List<Cliente>" as LC
+participant "cliente : Cliente" as C
+participant "vehiculos : List<Vehiculo>" as LV
+participant "vehiculo : Vehiculo" as V
+participant "alquileres : List<Alquiler>" as LA
+participant "alquiler : Alquiler" as A
+participant "historial : HistorialCambioEstado" as H
+
+Usuario -> SC : solicitarAlquiler(dniCuit, patente,\n fechaInicio, fechaDevolucionEstimada,\n claseAlquiler, usuario)
+
+loop [recorrer clientes para buscar cliente]
+    SC -> LC : obtenerSiguiente()
+    LC --> SC : clienteActual
+    SC -> C  : getDniCuit()
+    C --> SC  : dniCuitActual
+end
+
+loop [recorrer vehiculos para buscar vehiculo]
+    SC -> LV : obtenerSiguiente()
+    LV --> SC : vehiculoActual
+    SC -> V  : getPatente()
+    V --> SC  : patenteActual
+end
+
+loop [recorrer alquileres para validar disponibilidad del vehiculo]
+    SC -> LA : obtenerSiguiente()
+    LA --> SC : alquilerActual
+    SC -> A  : correspondeAVehiculo(vehiculo)
+    A --> SC  : corresponde
+    SC -> A  : seSuperpone(fechaInicio, fechaDevolucionEstimada)
+    A --> SC  : seSuperpone
+end
+
+SC -> V : estaDisponible(fechaInicio, fechaDevolucionEstimada, alquileres)
+V --> SC : disponible
+
+opt [disponible]
+    SC -> A ** : new AlquilerComun / AlquilerCorporativo /\n AlquilerTuristico\n(cliente, vehiculo, fechaInicio,\n fechaDevolucionEstimada, kmInicial)
+    SC -> A  : cambiarEstado(INGRESADO)
+    SC -> LA : add(alquiler)
+    SC -> H ** : new HistorialCambioEstado(fecha, "-", "INGRESADO",\n ALQUILER, idAlquiler, usuario)
+    SC -> H  : asociarAlquiler(alquiler)
+    SC -> SC : historiales.add(historial)
+end
+
+SC --> Usuario : alquiler ingresado
+
+@enduml
