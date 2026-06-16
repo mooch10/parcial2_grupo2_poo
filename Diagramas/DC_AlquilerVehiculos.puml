@@ -264,18 +264,6 @@ HistorialCambioEstado "0..*" -- "0..1" Cliente
 HistorialCambioEstado "0..*" -- "0..1" Vehiculo
 HistorialCambioEstado "0..*" -- "0..1" Alquiler
 
-' ─────────────── ENUMS USADOS ───────────────
-
-Cliente               ..> EstadoCliente
-Vehiculo              ..> EstadoVehiculo
-Vehiculo              ..> TipoVehiculo
-Vehiculo              ..> TipoCombustible
-Alquiler              ..> EstadoAlquiler
-Pago                  ..> EstadoPago
-Pago                  ..> MedioPago
-Pago                  ..> TipoPago
-HistorialCambioEstado ..> TipoEntidad
-
 ' ─────────────── CONTROLADORES GESTIONAN COLECCIONES ───────────────
 
 ClienteController   "1" *-- "0..*" Cliente
