@@ -6,52 +6,76 @@ title UC 3 — Solicitar Alquiler
 
 actor Usuario
 
-participant "sistema : SistemaController" as SC
-participant "clientes : List<Cliente>" as LC
-participant "cliente : Cliente" as C
-participant "vehiculos : List<Vehiculo>" as LV
-participant "vehiculo : Vehiculo" as V
+participant "view : SolicitarAlquilerView" as V
+participant "ctrlAlq : AlquilerController" as AC
+participant "ctrlCli : ClienteController" as CC
+participant "ctrlVeh : VehiculoController" as VC
+participant "vehiculo : Vehiculo" as Veh
 participant "alquileres : List<Alquiler>" as LA
 participant "alquiler : Alquiler" as A
+participant "ctrlHist : HistorialController" as HC
+participant "historiales : List<HistorialCambioEstado>" as LH
 participant "historial : HistorialCambioEstado" as H
 
-Usuario -> SC : solicitarAlquiler(dniCuit, patente,\n fechaInicio, fechaDevolucionEstimada,\n claseAlquiler, usuario)
+Usuario -> V : solicitarAlquiler()
+activate V
 
-loop [recorrer clientes para buscar cliente]
-    SC -> LC : obtenerSiguiente()
-    LC --> SC : clienteActual
-    SC -> C  : getDniCuit()
-    C --> SC  : dniCuitActual
+V -> AC : solicitarAlquiler(dniCuit, patente, fInicio, fFin, clase, usuario)
+activate AC
+
+AC -> CC : buscarClientePorDniCuit(dniCuit)
+activate CC
+CC --> AC : cliente
+deactivate CC
+
+AC -> VC : buscarVehiculoPorPatente(patente)
+activate VC
+VC --> AC : vehiculo
+deactivate VC
+
+AC -> Veh : estaDisponible(fInicio, fFin, alquileres)
+activate Veh
+Veh --> AC : true
+deactivate Veh
+
+opt disponible
+    alt clase es COMUN
+        AC -> A ** : new AlquilerComun(cliente, vehiculo, fInicio, fFin, kmInicial)
+    else clase es CORPORATIVO
+        AC -> A ** : new AlquilerCorporativo(cliente, vehiculo, fInicio, fFin, kmInicial)
+    else clase es TURISTICO
+        AC -> A ** : new AlquilerTuristico(cliente, vehiculo, fInicio, fFin, kmInicial)
+    end
+
+    AC -> A : cambiarEstado(INGRESADO)
+    activate A
+    deactivate A
+
+    AC -> LA : add(alquiler)
+    activate LA
+    deactivate LA
+
+    AC -> A : getId()
+    activate A
+    A --> AC : idAlquiler
+    deactivate A
+
+    AC -> HC : registrar("-", "INGRESADO", ALQUILER, idAlquiler, usuario)
+    activate HC
+
+    HC -> H ** : new HistorialCambioEstado(fecha, "-", "INGRESADO", ALQUILER, idAlquiler, usuario)
+    HC -> LH : add(historial)
+    activate LH
+    deactivate LH
+
+    HC --> AC : historial
+    deactivate HC
 end
 
-loop [recorrer vehiculos para buscar vehiculo]
-    SC -> LV : obtenerSiguiente()
-    LV --> SC : vehiculoActual
-    SC -> V  : getPatente()
-    V --> SC  : patenteActual
-end
+AC --> V : alquiler
+deactivate AC
 
-loop [recorrer alquileres para validar disponibilidad del vehiculo]
-    SC -> LA : obtenerSiguiente()
-    LA --> SC : alquilerActual
-    SC -> A  : correspondeAVehiculo(vehiculo)
-    A --> SC  : corresponde
-    SC -> A  : seSuperpone(fechaInicio, fechaDevolucionEstimada)
-    A --> SC  : seSuperpone
-end
-
-SC -> V : estaDisponible(fechaInicio, fechaDevolucionEstimada, alquileres)
-V --> SC : disponible
-
-opt [disponible]
-    SC -> A ** : new AlquilerComun / AlquilerCorporativo /\n AlquilerTuristico\n(cliente, vehiculo, fechaInicio,\n fechaDevolucionEstimada, kmInicial)
-    SC -> A  : cambiarEstado(INGRESADO)
-    SC -> LA : add(alquiler)
-    SC -> H ** : new HistorialCambioEstado(fecha, "-", "INGRESADO",\n ALQUILER, idAlquiler, usuario)
-    SC -> H  : asociarAlquiler(alquiler)
-    SC -> SC : historiales.add(historial)
-end
-
-SC --> Usuario : alquiler ingresado
+V --> Usuario : alquiler ingresado
+deactivate V
 
 @enduml

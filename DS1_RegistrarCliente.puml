@@ -6,25 +6,49 @@ title UC 1 — Registrar Cliente
 
 actor Usuario
 
-participant "sistema : SistemaController" as SC
+participant "view : RegistrarClienteView" as V
+participant "ctrl : ClienteController" as CC
 participant "clientes : List<Cliente>" as LC
 participant "cliente : Cliente" as C
+participant "ctrlHist : HistorialController" as HC
+participant "historiales : List<HistorialCambioEstado>" as LH
 participant "historial : HistorialCambioEstado" as H
 
-Usuario -> SC : registrarCliente(dniCuit, nombreRazonSocial,\n telefono, email, direccion, usuario)
+Usuario -> V : registrarCliente()
+activate V
 
-loop [recorrer clientes para validar DNI/CUIT]
-    SC -> LC : obtenerSiguiente()
-    LC --> SC : clienteActual
-end
+V -> CC : registrarCliente(dniCuit, nombre, tel, email, dir, usuario)
+activate CC
 
-SC -> C ** : new Cliente(dniCuit, nombreRazonSocial, telefono, email, direccion)
-SC -> C  : activar()
-SC -> LC : add(cliente)
-SC -> H ** : new HistorialCambioEstado(fecha, "-", "ACTIVO",\n CLIENTE, dniCuit, usuario)
-SC -> H  : asociarCliente(cliente)
-SC -> SC : historiales.add(historial)
+CC -> CC : buscarClientePorDniCuit(dniCuit)
+activate CC
+CC --> CC : null
+deactivate CC
 
-SC --> Usuario : cliente registrado
+CC -> C ** : new Cliente(dniCuit, nombre, tel, email, dir)
+CC -> C : activar()
+activate C
+deactivate C
+
+CC -> LC : add(cliente)
+activate LC
+deactivate LC
+
+CC -> HC : registrar("-", "ACTIVO", CLIENTE, dniCuit, usuario)
+activate HC
+
+HC -> H ** : new HistorialCambioEstado(fecha, "-", "ACTIVO", CLIENTE, dniCuit, usuario)
+HC -> LH : add(historial)
+activate LH
+deactivate LH
+
+HC --> CC : historial
+deactivate HC
+
+CC --> V : cliente
+deactivate CC
+
+V --> Usuario : cliente registrado
+deactivate V
 
 @enduml

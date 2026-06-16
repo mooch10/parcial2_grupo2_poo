@@ -6,25 +6,42 @@ title UC 2 — Registrar Vehículo
 
 actor Usuario
 
-participant "sistema : SistemaController" as SC
+participant "ctrl : VehiculoController" as VC
 participant "vehiculos : List<Vehiculo>" as LV
 participant "vehiculo : Vehiculo" as V
+participant "ctrlHist : HistorialController" as HC
+participant "historiales : List<HistorialCambioEstado>" as LH
 participant "historial : HistorialCambioEstado" as H
 
-Usuario -> SC : registrarVehiculo(patente, marca, modelo, anio,\n kilometraje, valorDiario, tipoVehiculo,\n tipoCombustible, kmIncluidosPorDia,\n costoKmExcedente, usuario)
+Usuario -> VC : registrarVehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm, usuario)
+activate VC
 
-loop [recorrer vehiculos para validar patente]
-    SC -> LV : obtenerSiguiente()
-    LV --> SC : vehiculoActual
-end
+VC -> VC : buscarVehiculoPorPatente(patente)
+activate VC
+VC --> VC : null
+deactivate VC
 
-SC -> V ** : new Vehiculo(patente, marca, modelo, anio,\n kilometraje, valorDiario, tipoVehiculo,\n tipoCombustible, kmIncluidosPorDia, costoKmExcedente)
-SC -> V  : cambiarEstado(DISPONIBLE)
-SC -> LV : add(vehiculo)
-SC -> H ** : new HistorialCambioEstado(fecha, "-", "DISPONIBLE",\n VEHICULO, patente, usuario)
-SC -> H  : asociarVehiculo(vehiculo)
-SC -> SC : historiales.add(historial)
+VC -> V ** : new Vehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm)
+VC -> V : cambiarEstado(DISPONIBLE)
+activate V
+deactivate V
 
-SC --> Usuario : vehiculo registrado
+VC -> LV : add(vehiculo)
+activate LV
+deactivate LV
+
+VC -> HC : registrar("-", "DISPONIBLE", VEHICULO, patente, usuario)
+activate HC
+
+HC -> H ** : new HistorialCambioEstado(fecha, "-", "DISPONIBLE", VEHICULO, patente, usuario)
+HC -> LH : add(historial)
+activate LH
+deactivate LH
+
+HC --> VC : historial
+deactivate HC
+
+VC --> Usuario : vehiculo registrado
+deactivate VC
 
 @enduml

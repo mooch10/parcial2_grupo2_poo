@@ -6,52 +6,73 @@ title UC 4 — Finalizar Alquiler y Calcular Saldo
 
 actor Usuario
 
-participant "sistema : SistemaController" as SC
-participant "alquileres : List<Alquiler>" as LA
+participant "ctrlAlq : AlquilerController" as AC
 participant "alquiler : Alquiler" as A
 participant "vehiculo : Vehiculo" as V
-participant "pagos : List<Pago>" as LP
-participant "pago : Pago" as P
-participant "historial : HistorialCambioEstado" as H
+participant "ctrlHist : HistorialController" as HC
+participant "historiales : List<HistorialCambioEstado>" as LH
+participant "historialAlq : HistorialCambioEstado" as HA
+participant "historialVeh : HistorialCambioEstado" as HV
 
-Usuario -> SC : finalizarAlquiler(idAlquiler,\n kilometrajeFinal,\n fechaDevolucionReal, usuario)
+Usuario -> AC : finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario)
+activate AC
 
-loop [recorrer alquileres para buscar alquiler]
-    SC -> LA : obtenerSiguiente()
-    LA --> SC : alquilerActual
-    SC -> A  : getId()
-    A --> SC  : idActual
-end
+AC -> AC : buscarPorId(idAlquiler)
+activate AC
+AC --> AC : alquiler
+deactivate AC
 
-SC -> A  : getVehiculo()
-A --> SC  : vehiculo
+AC -> A : getVehiculo()
+activate A
+A --> AC : vehiculo
+deactivate A
 
-SC -> V  : actualizarKilometraje(kilometrajeFinal)
-SC -> A  : calcularImporteTotal()
-A --> SC  : importeTotal
+AC -> V : actualizarKilometraje(kmFinal)
+activate V
+deactivate V
 
-SC -> A  : getPagos()
-A --> SC  : pagos
+AC -> A : calcularImporteTotal()
+activate A
+A --> AC : importeTotal
+deactivate A
 
-loop [recorrer pagos para calcular seña abonada]
-    SC -> LP : obtenerSiguiente()
-    LP --> SC : pagoActual
-    SC -> P  : esSeniaConfirmada()
-    P --> SC  : resultado
-    SC -> P  : getImporte()
-    P --> SC  : importePago
-end
+AC -> A : calcularSaldoPendiente()
+activate A
+A --> AC : saldoPendiente
+deactivate A
 
-SC -> A  : calcularSaldoPendiente()
-A --> SC  : saldoPendiente
+AC -> A : cambiarEstado(FINALIZADO)
+activate A
+deactivate A
 
-SC -> A  : cambiarEstado(FINALIZADO)
-SC -> V  : cambiarEstado(DISPONIBLE)
+AC -> V : cambiarEstado(DISPONIBLE)
+activate V
+deactivate V
 
-SC -> H ** : new HistorialCambioEstado(fecha, "EN_CURSO", "FINALIZADO",\n ALQUILER, idAlquiler, usuario)
-SC -> H  : asociarAlquiler(alquiler)
-SC -> SC : historiales.add(historial)
+AC -> V : getPatente()
+activate V
+V --> AC : patente
+deactivate V
 
-SC --> Usuario : saldoPendiente
+AC -> HC : registrar("EN_CURSO", "FINALIZADO", ALQUILER, idAlquiler, usuario)
+activate HC
+HC -> HA ** : new HistorialCambioEstado(fecha, "EN_CURSO", "FINALIZADO", ALQUILER, idAlquiler, usuario)
+HC -> LH : add(historialAlq)
+activate LH
+deactivate LH
+HC --> AC : historialAlq
+deactivate HC
+
+AC -> HC : registrar("ALQUILADO", "DISPONIBLE", VEHICULO, patente, usuario)
+activate HC
+HC -> HV ** : new HistorialCambioEstado(fecha, "ALQUILADO", "DISPONIBLE", VEHICULO, patente, usuario)
+HC -> LH : add(historialVeh)
+activate LH
+deactivate LH
+HC --> AC : historialVeh
+deactivate HC
+
+AC --> Usuario : saldoPendiente
+deactivate AC
 
 @enduml

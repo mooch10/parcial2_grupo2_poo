@@ -6,42 +6,50 @@ title UC 5 — Consultar Vehículos Disponibles
 
 actor Usuario
 
-participant "sistema : SistemaController" as SC
+participant "view : ConsultarDisponibilidadView" as V
+participant "ctrlVeh : VehiculoController" as VC
+participant "ctrlAlq : AlquilerController" as AC
 participant "vehiculos : List<Vehiculo>" as LV
-participant "vehiculo : Vehiculo" as V
-participant "alquileres : List<Alquiler>" as LA
-participant "alquiler : Alquiler" as A
+participant "vehiculo : Vehiculo" as Veh
 participant "resultado : List<Vehiculo>" as LR
 
-Usuario -> SC : consultarVehiculosDisponibles(fechaInicio, fechaFin, tipoVehiculo)
+Usuario -> V : consultar()
+activate V
 
-SC -> LR ** : new List<Vehiculo>()
+V -> VC : consultarVehiculosDisponibles(fInicio, fFin, tipo)
+activate VC
 
-loop [recorrer vehiculos]
-    SC -> LV : obtenerSiguiente()
-    LV --> SC : vehiculoActual
-    SC -> V  : getTipoVehiculo()
-    V --> SC  : tipoVehiculoActual
+VC -> AC : getAlquileres()
+activate AC
+AC --> VC : alquileres
+deactivate AC
 
-    opt [tipoVehiculoActual coincide]
-        loop [recorrer alquileres para validar disponibilidad]
-            SC -> LA : obtenerSiguiente()
-            LA --> SC : alquilerActual
-            SC -> A  : correspondeAVehiculo(vehiculo)
-            A --> SC  : corresponde
-            SC -> A  : seSuperpone(fechaInicio, fechaFin)
-            A --> SC  : seSuperpone
-        end
+VC -> LR ** : new ArrayList<Vehiculo>()
 
-        SC -> V : estaDisponible(fechaInicio, fechaFin, alquileres)
-        V --> SC : disponible
+loop por cada vehiculo en vehiculos
+    VC -> Veh : getTipoVehiculo()
+    activate Veh
+    Veh --> VC : tipoVehiculoActual
+    deactivate Veh
 
-        opt [disponible]
-            SC -> LR : add(vehiculo)
+    opt tipoVehiculoActual == tipo
+        VC -> Veh : estaDisponible(fInicio, fFin, alquileres)
+        activate Veh
+        Veh --> VC : disponible (boolean)
+        deactivate Veh
+
+        opt disponible
+            VC -> LR : add(vehiculo)
+            activate LR
+            deactivate LR
         end
     end
 end
 
-SC --> Usuario : resultado
+VC --> V : resultado
+deactivate VC
+
+V --> Usuario : mostrar vehiculos disponibles
+deactivate V
 
 @enduml
