@@ -6,14 +6,18 @@ title UC 2 — Registrar Vehículo
 
 actor Usuario
 
+participant "view : RegistrarVehiculoView" as V
 participant "ctrl : VehiculoController" as VC
 participant "vehiculos : List<Vehiculo>" as LV
-participant "vehiculo : Vehiculo" as V
+participant "vehiculo : Vehiculo" as Veh
 participant "ctrlHist : HistorialController" as HC
 participant "historiales : List<HistorialCambioEstado>" as LH
 participant "historial : HistorialCambioEstado" as H
 
-Usuario -> VC : registrarVehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm, usuario)
+Usuario -> V : registrarVehiculo()
+activate V
+
+V -> VC : registrarVehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm, usuario)
 activate VC
 
 VC -> VC : buscarVehiculoPorPatente(patente)
@@ -21,10 +25,10 @@ activate VC
 VC --> VC : null
 deactivate VC
 
-VC -> V ** : new Vehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm)
-VC -> V : cambiarEstado(DISPONIBLE)
-activate V
-deactivate V
+VC -> Veh ** : new Vehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm)
+VC -> Veh : cambiarEstado(DISPONIBLE)
+activate Veh
+deactivate Veh
 
 VC -> LV : add(vehiculo)
 activate LV
@@ -41,7 +45,10 @@ deactivate LH
 HC --> VC : historial
 deactivate HC
 
-VC --> Usuario : vehiculo registrado
+VC --> V : vehiculo
 deactivate VC
+
+V --> Usuario : vehiculo registrado
+deactivate V
 
 @enduml

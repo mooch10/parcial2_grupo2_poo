@@ -6,15 +6,21 @@ title UC 4 — Finalizar Alquiler y Calcular Saldo
 
 actor Usuario
 
+participant "view : FinalizarAlquilerView" as V
 participant "ctrlAlq : AlquilerController" as AC
 participant "alquiler : Alquiler" as A
-participant "vehiculo : Vehiculo" as V
+participant "vehiculo : Vehiculo" as Veh
+participant "pagos : List<Pago>" as LP
+participant "pago : Pago" as P
 participant "ctrlHist : HistorialController" as HC
 participant "historiales : List<HistorialCambioEstado>" as LH
 participant "historialAlq : HistorialCambioEstado" as HA
 participant "historialVeh : HistorialCambioEstado" as HV
 
-Usuario -> AC : finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario)
+Usuario -> V : finalizarAlquiler()
+activate V
+
+V -> AC : finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario)
 activate AC
 
 AC -> AC : buscarPorId(idAlquiler)
@@ -27,14 +33,36 @@ activate A
 A --> AC : vehiculo
 deactivate A
 
-AC -> V : actualizarKilometraje(kmFinal)
-activate V
-deactivate V
+AC -> Veh : actualizarKilometraje(kmFinal)
+activate Veh
+deactivate Veh
 
 AC -> A : calcularImporteTotal()
 activate A
 A --> AC : importeTotal
 deactivate A
+
+AC -> A : getPagos()
+activate A
+A --> AC : pagos
+deactivate A
+
+loop recorrer pagos para calcular seña abonada
+    AC -> LP : obtenerSiguiente()
+    activate LP
+    LP --> AC : pagoActual
+    deactivate LP
+    
+    AC -> P : esSeniaConfirmada()
+    activate P
+    P --> AC : resultado
+    deactivate P
+    
+    AC -> P : getImporte()
+    activate P
+    P --> AC : importePago
+    deactivate P
+end
 
 AC -> A : calcularSaldoPendiente()
 activate A
@@ -45,14 +73,14 @@ AC -> A : cambiarEstado(FINALIZADO)
 activate A
 deactivate A
 
-AC -> V : cambiarEstado(DISPONIBLE)
-activate V
-deactivate V
+AC -> Veh : cambiarEstado(DISPONIBLE)
+activate Veh
+deactivate Veh
 
-AC -> V : getPatente()
-activate V
-V --> AC : patente
-deactivate V
+AC -> Veh : getPatente()
+activate Veh
+Veh --> AC : patente
+deactivate Veh
 
 AC -> HC : registrar("EN_CURSO", "FINALIZADO", ALQUILER, idAlquiler, usuario)
 activate HC
@@ -72,7 +100,10 @@ deactivate LH
 HC --> AC : historialVeh
 deactivate HC
 
-AC --> Usuario : saldoPendiente
+AC --> V : saldoPendiente
 deactivate AC
+
+V --> Usuario : mostrar saldo pendiente
+deactivate V
 
 @enduml
