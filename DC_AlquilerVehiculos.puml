@@ -1,165 +1,255 @@
-    @startuml DC_AlquilerVehiculos_MVC_Refinado
-    skinparam classAttributeIconSize 0
-    skinparam linetype ortho
-    hide empty members
+@startuml DC_AlquilerVehiculos
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
 
-    ' ─────────────── ENUMS ───────────────
-    enum EstadoCliente { ACTIVO; INACTIVO }
-    enum EstadoVehiculo { DISPONIBLE; ALQUILADO; MANTENIMIENTO; BAJA }
-    enum EstadoAlquiler { INGRESADO; CONFIRMADO; EN_CURSO; FINALIZADO; CANCELADO }
-    enum EstadoPago { REGISTRADO; CONFIRMADO; ANULADO }
-    enum TipoVehiculo { AUTO; CAMIONETA; UTILITARIO; MOTO }
-    enum TipoCombustible { NAFTA; DIESEL; GNC; ELECTRICO; HIBRIDO }
-    enum MedioPago { EFECTIVO; TRANSFERENCIA; TARJETA; BILLETERA_VIRTUAL }
-    enum TipoPago { SENIA; SALDO }
-    enum TipoEntidad { CLIENTE; VEHICULO; ALQUILER; PAGO }
+' ─────────────── ENUMS ───────────────
 
-    ' ─────────────── COMPONENTES DEL MODELO ───────────────
+enum EstadoCliente    { ACTIVO; INACTIVO }
+enum EstadoVehiculo   { DISPONIBLE; ALQUILADO; MANTENIMIENTO; BAJA }
+enum EstadoAlquiler   { INGRESADO; CONFIRMADO; EN_CURSO; FINALIZADO; CANCELADO }
+enum EstadoPago       { REGISTRADO; CONFIRMADO; ANULADO }
+enum TipoVehiculo     { AUTO; CAMIONETA; UTILITARIO; MOTO }
+enum TipoCombustible  { NAFTA; DIESEL; GNC; ELECTRICO; HIBRIDO }
+enum MedioPago        { EFECTIVO; TRANSFERENCIA; TARJETA; BILLETERA_VIRTUAL }
+enum TipoPago         { SENIA; SALDO }
+enum TipoEntidad      { CLIENTE; VEHICULO; ALQUILER; PAGO }
 
-    class HistorialCambioEstado {
-        - id : int
-        - fechaCambio : Date
-        - estadoAnterior : String
-        - estadoNuevo : String
-        - tipoEntidad : TipoEntidad
-        - referenciaEntidad : String
-        - usuarioResponsable : String
-        + HistorialCambioEstado(fecha, ant, nuevo, tipo, ref, usr)
-    }
+' ─────────────── MODELO ───────────────
 
-    class Cliente {
-        - dniCuit : String
-        - nombreRazonSocial : String
-        - telefono : String
-        - email : String
-        - direccion : String
-        - estado : EstadoCliente
-        - creditoAFavor : double
-        + Cliente(dniCuit, nombre, tel, email, dir)
-        + activar() : void
-        + agregarCredito(importe : double) : void
-        + getDniCuit() : String
-    }
+class HistorialCambioEstado {
+    - id : int
+    - fechaCambio : Date
+    - estadoAnterior : String
+    - estadoNuevo : String
+    - tipoEntidad : TipoEntidad
+    - referenciaEntidad : String
+    - usuarioResponsable : String
+    + HistorialCambioEstado(fecha, ant, nuevo, tipo, ref, usr)
+}
 
-    class Vehiculo {
-        - patente : String
-        - marca : String
-        - modelo : String
-        - anio : int
-        - kilometrajeActual : int
-        - estado : EstadoVehiculo
-        - valorDiario : double
-        - tipoVehiculo : TipoVehiculo
-        - tipoCombustible : TipoCombustible
-        - kmIncluidosPorDia : int
-        - costoKmExcedente : double
-        + Vehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm)
-        + cambiarEstado(nuevoEstado : EstadoVehiculo) : void
-        + estaDisponible(fInicio : Date, fFin : Date, alquileres : List) : boolean
-        + actualizarKilometraje(kmFinal : int) : void
-        + getPatente() : String
-        + getTipoVehiculo() : TipoVehiculo
-    }
+class Cliente {
+    - dniCuit : String
+    - nombreRazonSocial : String
+    - telefono : String
+    - email : String
+    - direccion : String
+    - estado : EstadoCliente
+    - creditoAFavor : double
+    + Cliente(dniCuit, nombre, tel, email, dir)
+    + activar() : void
+    + agregarCredito(importe : double) : void
+    + getDniCuit() : String
+}
 
-    class Pago {
-        - id : int
-        - fecha : Date
-        - importe : double
-        - medioPago : MedioPago
-        - estado : EstadoPago
-        - usuarioRegistrador : String
-        - tipoPago : TipoPago
-        + Pago(id, fecha, importe, medioPago, usr, tipo)
-        + esSeniaConfirmada() : boolean
-        + getImporte() : double
-    }
+class Vehiculo {
+    - patente : String
+    - marca : String
+    - modelo : String
+    - anio : int
+    - kilometrajeActual : int
+    - estado : EstadoVehiculo
+    - valorDiario : double
+    - tipoVehiculo : TipoVehiculo
+    - tipoCombustible : TipoCombustible
+    - kmIncluidosPorDia : int
+    - costoKmExcedente : double
+    + Vehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm)
+    + cambiarEstado(nuevoEstado : EstadoVehiculo) : void
+    + estaDisponible(fInicio : Date, fFin : Date, alquileres : List) : boolean
+    + actualizarKilometraje(kmFinal : int) : void
+    + getPatente() : String
+    + getTipoVehiculo() : TipoVehiculo
+}
 
-    abstract class Alquiler {
-        - id : int
-        - fechaInicio : Date
-        - fechaDevolucionEstimada : Date
-        - fechaDevolucionReal : Date
-        - estado : EstadoAlquiler
-        - kilometrajeInicial : int
-        - kilometrajeFinal : int
-        - importeTotal : double
-        - importePendiente : double
-        + Alquiler(cliente, vehiculo, fInicio, fDevEst, kmIni)
-        + cambiarEstado(nuevoEstado : EstadoAlquiler) : void
-        + calcularDias() : int
-        + calcularImporteBase() : double
-        + calcularKmExcedentes() : double
-        + calcularSeniaAbonada() : double
-        + calcularSaldoPendiente() : double
-        + agregarPago(pago : Pago) : void
-        + {abstract} calcularImporteTotal() : double
-        + getId() : int
-    }
+class Pago {
+    - id : int
+    - fecha : Date
+    - importe : double
+    - medioPago : MedioPago
+    - estado : EstadoPago
+    - usuarioRegistrador : String
+    - tipoPago : TipoPago
+    + Pago(id, fecha, importe, medioPago, usr, tipo)
+    + confirmar() : void
+    + anular() : void
+    + esSeniaConfirmada() : boolean
+    + getImporte() : double
+}
 
-    class AlquilerComun { + calcularImporteTotal() : double }
-    class AlquilerCorporativo { - porcentajeDescuento : double; + calcularImporteTotal() : double }
-    class AlquilerTuristico { - porcentajeRecargo : double; + calcularImporteTotal() : double }
+abstract class Alquiler {
+    - id : int
+    - fechaInicio : Date
+    - fechaDevolucionEstimada : Date
+    - fechaDevolucionReal : Date
+    - estado : EstadoAlquiler
+    - kilometrajeInicial : int
+    - kilometrajeFinal : int
+    - importeTotal : double
+    - importePendiente : double
+    + Alquiler(cliente, vehiculo, fInicio, fDevEst, kmIni)
+    + cambiarEstado(nuevoEstado : EstadoAlquiler) : void
+    + calcularDias() : int
+    + calcularImporteBase() : double
+    + calcularKmExcedentes() : double
+    + calcularSeniaAbonada() : double
+    + calcularSaldoPendiente() : double
+    + calcularHorasAnticipacion(fCancelacion : Date) : long
+    + agregarPago(pago : Pago) : void
+    + {abstract} calcularImporteTotal() : double
+    + getId() : int
+}
 
-    ' ─────────────── CONTROLADORES (MVC - SINGLETON) ───────────────
+class AlquilerComun {
+    + calcularImporteTotal() : double
+}
 
-    class ClienteController <<Singleton>> {
-        -{static} instancia : ClienteController
-        - clientes : List<Cliente>
-        - ClienteController()
-        +{static} getInstancia() : ClienteController
-        + registrarCliente(dniCuit, nombre, tel, email, dir, usuario) : Cliente
-        + buscarClientePorDniCuit(dniCuit : String) : Cliente
-    }
+class AlquilerCorporativo {
+    - porcentajeDescuento : double
+    + calcularImporteTotal() : double
+    + getPorcentajeDescuento() : double
+}
 
-    class VehiculoController <<Singleton>> {
-        -{static} instancia : VehiculoController
-        - vehiculos : List<Vehiculo>
-        - VehiculoController()
-        +{static} getInstancia() : VehiculoController
-        + registrarVehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm, usuario) : Vehiculo
-        + buscarVehiculoPorPatente(patente : String) : Vehiculo
-        + consultarVehiculosDisponibles(fInicio, fFin, tipo) : List<Vehiculo>
-    }
+class AlquilerTuristico {
+    - porcentajeRecargo : double
+    + calcularImporteTotal() : double
+    + getPorcentajeRecargo() : double
+}
 
-    class AlquilerController <<Singleton>> {
-        -{static} instancia : AlquilerController
-        - alquileres : List<Alquiler>
-        ' Centraliza la persistencia de auditoría del sistema
-        - historialesAuditoria : List<HistorialCambioEstado> 
-        - AlquilerController()
-        +{static} getInstancia() : AlquilerController
-        + solicitarAlquiler(dniCuit, patente, fInicio, fFin, clase, usuario) : Alquiler
-        + confirmarAlquilerConSenia(idAlquiler, importe, medioPago, usuario) : Pago
-        + finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario) : double
-        + registrarHistorialInterno(fecha, ant, nuevo, tipo, ref, usr) : void
-    }
+' ─────────────── CONTROLADORES SINGLETON ───────────────
 
-    ' ─────────────── VISTAS (SWING) ───────────────
+class ClienteController <<Singleton>> {
+    - {static} instancia : ClienteController
+    - clientes : List<Cliente>
+    - ClienteController()
+    + {static} getInstancia() : ClienteController
+    + registrarCliente(dniCuit, nombre, tel, email, dir, usuario) : Cliente
+    + buscarClientePorDniCuit(dniCuit : String) : Cliente
+    + alquileresConfirmadosDeCliente(dniCuit : String) : List<Alquiler>
+    + getClientes() : List<Cliente>
+}
 
-    class RegistrarClienteView { - ctrl : ClienteController }
-    class SolicitarAlquilerView { - ctrlAlq : AlquilerController; - ctrlCli : ClienteController; - ctrlVeh : VehiculoController }
-    class ConsultarDisponibilidadView { - ctrlVeh : VehiculoController }
+class VehiculoController <<Singleton>> {
+    - {static} instancia : VehiculoController
+    - vehiculos : List<Vehiculo>
+    - VehiculoController()
+    + {static} getInstancia() : VehiculoController
+    + registrarVehiculo(patente, marca, mod, anio, km, val, tipo, comb, kmD, cKm, usuario) : Vehiculo
+    + buscarVehiculoPorPatente(patente : String) : Vehiculo
+    + consultarVehiculosDisponibles(fInicio : Date, fFin : Date, tipo : TipoVehiculo) : List<Vehiculo>
+    + getVehiculos() : List<Vehiculo>
+}
 
-    ' ─────────────── RELACIONES ───────────────
+class AlquilerController <<Singleton>> {
+    - {static} instancia : AlquilerController
+    - alquileres : List<Alquiler>
+    - porcentajeDescuentoCorporativo : double
+    - porcentajeRecargoTuristico : double
+    - AlquilerController()
+    + {static} getInstancia() : AlquilerController
+    + solicitarAlquiler(dniCuit, patente, fInicio, fFin, clase, usuario) : Alquiler
+    + confirmarAlquilerConSenia(idAlquiler, importe, medioPago, usuario) : Pago
+    + cancelarAlquiler(idAlquiler, fCancelacion, usuario) : void
+    + iniciarAlquiler(idAlquiler, usuario) : void
+    + finalizarAlquiler(idAlquiler, kmFinal, fDevReal, usuario) : double
+    + buscarPorId(id : int) : Alquiler
+    + totalRecaudadoPorPeriodo(desde : Date, hasta : Date) : double
+    + obtenerPorcentajeAplicable(alquiler : Alquiler) : double
+    + getAlquileres() : List<Alquiler>
+}
 
-    Alquiler <|-- AlquilerComun
-    Alquiler <|-- AlquilerCorporativo
-    Alquiler <|-- AlquilerTuristico
+class PagoController <<Singleton>> {
+    - {static} instancia : PagoController
+    - pagos : List<Pago>
+    - PagoController()
+    + {static} getInstancia() : PagoController
+    + registrarPago(idAlquiler, importe, medioPago, tipoPago, usuario) : Pago
+    + anularPago(idPago, usuario) : void
+    + getPagos() : List<Pago>
+}
 
-    Cliente   "1" o-- "0..*" Alquiler : solicita >
-    Vehiculo  "1" o-- "0..*" Alquiler : es alquilado en >
-    Alquiler  "1" *-- "0..*" Pago     : contiene >
+class HistorialController <<Singleton>> {
+    - {static} instancia : HistorialController
+    - historiales : List<HistorialCambioEstado>
+    - HistorialController()
+    + {static} getInstancia() : HistorialController
+    + registrar(ant, nuevo, tipo : TipoEntidad, ref, usuario) : HistorialCambioEstado
+    + getHistoriales() : List<HistorialCambioEstado>
+}
 
-    RegistrarClienteView        ..> ClienteController : usa
-    ConsultarDisponibilidadView ..> VehiculoController : usa
-    SolicitarAlquilerView       ..> AlquilerController : usa
+' ─────────────── VISTAS SWING ───────────────
 
-    ClienteController "1" *-- "0..*" Cliente : gestiona >
-    VehiculoController "1" *-- "0..*" Vehiculo : gestiona >
-    AlquilerController "1" *-- "0..*" Alquiler : gestiona >
-    AlquilerController "1" *-- "0..*" HistorialCambioEstado : almacena auditoría >
+class RegistrarClienteView {
+    - ctrl : ClienteController
+    + inicializarUI() : void
+    - registrarCliente() : void
+}
 
-    AlquilerController ..> ClienteController : consulta >
-    AlquilerController ..> VehiculoController : consulta >
+class SolicitarAlquilerView {
+    - ctrlAlq : AlquilerController
+    - ctrlCli : ClienteController
+    - ctrlVeh : VehiculoController
+    + inicializarUI() : void
+    - solicitarAlquiler() : void
+}
 
-    @enduml
+class ConsultarDisponibilidadView {
+    - ctrlVeh : VehiculoController
+    + inicializarUI() : void
+    - consultar() : void
+}
+
+' ─────────────── HERENCIA ───────────────
+
+Alquiler <|-- AlquilerComun
+Alquiler <|-- AlquilerCorporativo
+Alquiler <|-- AlquilerTuristico
+
+' ─────────────── ASOCIACIONES DEL MODELO ───────────────
+
+Cliente  "1"    o-- "0..*" Alquiler              : solicita >
+Vehiculo "1"    o-- "0..*" Alquiler              : es alquilado en >
+Alquiler "1"    *-- "0..*" Pago                  : contiene >
+HistorialCambioEstado "0..*" -- "0..1" Cliente   : afecta >
+HistorialCambioEstado "0..*" -- "0..1" Vehiculo  : afecta >
+HistorialCambioEstado "0..*" -- "0..1" Alquiler  : afecta >
+
+' ─────────────── ENUMS USADOS ───────────────
+
+Cliente               ..> EstadoCliente
+Vehiculo              ..> EstadoVehiculo
+Vehiculo              ..> TipoVehiculo
+Vehiculo              ..> TipoCombustible
+Alquiler              ..> EstadoAlquiler
+Pago                  ..> EstadoPago
+Pago                  ..> MedioPago
+Pago                  ..> TipoPago
+HistorialCambioEstado ..> TipoEntidad
+
+' ─────────────── CONTROLADORES GESTIONAN COLECCIONES ───────────────
+
+ClienteController   "1" *-- "0..*" Cliente               : gestiona >
+VehiculoController  "1" *-- "0..*" Vehiculo              : gestiona >
+AlquilerController  "1" *-- "0..*" Alquiler              : gestiona >
+PagoController      "1" *-- "0..*" Pago                  : gestiona >
+HistorialController "1" *-- "0..*" HistorialCambioEstado : gestiona >
+
+' ─────────────── DEPENDENCIAS ENTRE CONTROLADORES ───────────────
+
+ClienteController  ..> HistorialController : registra cambios >
+VehiculoController ..> HistorialController : registra cambios >
+AlquilerController ..> HistorialController : registra cambios >
+PagoController     ..> HistorialController : registra cambios >
+AlquilerController ..> ClienteController   : consulta >
+AlquilerController ..> VehiculoController  : consulta >
+AlquilerController ..> PagoController      : delega pagos >
+
+' ─────────────── VISTAS USAN CONTROLADORES ───────────────
+
+RegistrarClienteView        ..> ClienteController  : usa >
+SolicitarAlquilerView       ..> AlquilerController : usa >
+SolicitarAlquilerView       ..> ClienteController  : usa >
+SolicitarAlquilerView       ..> VehiculoController : usa >
+ConsultarDisponibilidadView ..> VehiculoController : usa >
+
+@enduml
