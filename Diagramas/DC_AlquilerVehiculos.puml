@@ -5,15 +5,65 @@ hide empty members
 
 ' ─────────────── ENUMS ───────────────
 
-enum EstadoCliente    { ACTIVO; INACTIVO }
-enum EstadoVehiculo   { DISPONIBLE; ALQUILADO; MANTENIMIENTO; BAJA }
-enum EstadoAlquiler   { INGRESADO; CONFIRMADO; EN_CURSO; FINALIZADO; CANCELADO }
-enum EstadoPago       { REGISTRADO; CONFIRMADO; ANULADO }
-enum TipoVehiculo     { AUTO; CAMIONETA; UTILITARIO; MOTO }
-enum TipoCombustible  { NAFTA; DIESEL; GNC; ELECTRICO; HIBRIDO }
-enum MedioPago        { EFECTIVO; TRANSFERENCIA; TARJETA; BILLETERA_VIRTUAL }
-enum TipoPago         { SENIA; SALDO }
-enum TipoEntidad      { CLIENTE; VEHICULO; ALQUILER; PAGO }
+enum EstadoCliente { 
+    ACTIVO
+    INACTIVO 
+}
+
+enum EstadoVehiculo { 
+    DISPONIBLE
+    ALQUILADO
+    MANTENIMIENTO
+    BAJA 
+}
+
+enum EstadoAlquiler { 
+    INGRESADO
+    CONFIRMADO
+    EN_CURSO
+    FINALIZADO
+    CANCELADO 
+}
+
+enum EstadoPago { 
+    REGISTRADO
+    CONFIRMADO
+    ANULADO 
+}
+
+enum TipoVehiculo { 
+    AUTO
+    CAMIONETA
+    UTILITARIO
+    MOTO 
+}
+
+enum TipoCombustible { 
+    NAFTA
+    DIESEL
+    GNC
+    ELECTRICO
+    HIBRIDO 
+}
+
+enum MedioPago { 
+    EFECTIVO
+    TRANSFERENCIA
+    TARJETA
+    BILLETERA_VIRTUAL 
+}
+
+enum TipoPago { 
+    SENIA
+    SALDO 
+}
+
+enum TipoEntidad { 
+    CLIENTE
+    VEHICULO
+    ALQUILER
+    PAGO 
+}
 
 ' ─────────────── MODELO ───────────────
 
@@ -207,12 +257,12 @@ Alquiler <|-- AlquilerTuristico
 
 ' ─────────────── ASOCIACIONES DEL MODELO ───────────────
 
-Cliente  "1"    o-- "0..*" Alquiler              : solicita >
-Vehiculo "1"    o-- "0..*" Alquiler              : es alquilado en >
-Alquiler "1"    *-- "0..*" Pago                  : contiene >
-HistorialCambioEstado "0..*" -- "0..1" Cliente   : afecta >
-HistorialCambioEstado "0..*" -- "0..1" Vehiculo  : afecta >
-HistorialCambioEstado "0..*" -- "0..1" Alquiler  : afecta >
+Cliente  "1"    o-- "0..*" Alquiler
+Vehiculo "1"    o-- "0..*" Alquiler
+Alquiler "1"    *-- "0..*" Pago
+HistorialCambioEstado "0..*" -- "0..1" Cliente
+HistorialCambioEstado "0..*" -- "0..1" Vehiculo
+HistorialCambioEstado "0..*" -- "0..1" Alquiler
 
 ' ─────────────── ENUMS USADOS ───────────────
 
@@ -228,28 +278,28 @@ HistorialCambioEstado ..> TipoEntidad
 
 ' ─────────────── CONTROLADORES GESTIONAN COLECCIONES ───────────────
 
-ClienteController   "1" *-- "0..*" Cliente               : gestiona >
-VehiculoController  "1" *-- "0..*" Vehiculo              : gestiona >
-AlquilerController  "1" *-- "0..*" Alquiler              : gestiona >
-PagoController      "1" *-- "0..*" Pago                  : gestiona >
-HistorialController "1" *-- "0..*" HistorialCambioEstado : gestiona >
+ClienteController   "1" *-- "0..*" Cliente
+VehiculoController  "1" *-- "0..*" Vehiculo
+AlquilerController  "1" *-- "0..*" Alquiler
+PagoController      "1" *-- "0..*" Pago
+HistorialController "1" *-- "0..*" HistorialCambioEstado
 
 ' ─────────────── DEPENDENCIAS ENTRE CONTROLADORES ───────────────
 
-ClienteController  ..> HistorialController : registra cambios >
-VehiculoController ..> HistorialController : registra cambios >
-AlquilerController ..> HistorialController : registra cambios >
-PagoController     ..> HistorialController : registra cambios >
-AlquilerController ..> ClienteController   : consulta >
-AlquilerController ..> VehiculoController  : consulta >
-AlquilerController ..> PagoController      : delega pagos >
+ClienteController  ..> HistorialController
+VehiculoController ..> HistorialControlleros
+AlquilerController ..> HistorialController
+PagoController     ..> HistorialController
+AlquilerController ..> ClienteController
+AlquilerController ..> VehiculoController
+AlquilerController ..> PagoController
 
 ' ─────────────── VISTAS USAN CONTROLADORES ───────────────
 
-RegistrarClienteView        ..> ClienteController  : usa >
-SolicitarAlquilerView       ..> AlquilerController : usa >
-SolicitarAlquilerView       ..> ClienteController  : usa >
-SolicitarAlquilerView       ..> VehiculoController : usa >
-ConsultarDisponibilidadView ..> VehiculoController : usa >
+RegistrarClienteView        ..> ClienteController
+SolicitarAlquilerView       ..> AlquilerController
+SolicitarAlquilerView       ..> ClienteController
+SolicitarAlquilerView       ..> VehiculoController
+ConsultarDisponibilidadView ..> VehiculoController
 
 @enduml
