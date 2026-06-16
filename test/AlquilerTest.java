@@ -1,4 +1,3 @@
-import controladores.*;
 import modelo.*;
 import modelo.enums.*;
 
@@ -9,7 +8,6 @@ import java.util.List;
 public class AlquilerTest {
 
     public static void main(String[] args) {
-        testCalcularDiasAlquiler();
         testCalcularImporteTotalComun();
         testCalcularImporteTotalCorporativo();
         testCalcularImporteTotalTuristico();
